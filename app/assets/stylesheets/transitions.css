@@ -11,6 +11,10 @@
   view-transition-name: player;
 }
 
+.popular-tracks {
+  view-transition-name: popular-tracks;
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
 }
@@ -28,12 +32,29 @@
   from { transform: translateX(100%); }
 }
 
+@keyframes full-slide-to-bottom {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes full-slide-from-bottom {
+  from { transform: translateY(100%); }
+}
+
 html[transition="aside"]::view-transition-old(aside) {
   animation: 500ms ease-in 0ms both full-slide-to-right, 500ms ease-out 50ms both fade-out;
 }
 
 html[transition="aside"]::view-transition-new(aside) {
   animation: 300ms ease-out 100ms both full-slide-from-right, 300ms ease-in 0ms both fade-in;
+}
+
+html[transition="popular-tracks"]::view-transition-old(popular-tracks) {
+  animation: 500ms ease-in 0ms both full-slide-to-bottom, 500ms ease-out 50ms both fade-out;
+}
+
+html[transition="popular-tracks"]::view-transition-new(popular-tracks) {
+  animation: 300ms ease-out 100ms both full-slide-from-bottom, 300ms ease-in 0ms both fade-in;
 }
 
 @media (prefers-reduced-motion) {
