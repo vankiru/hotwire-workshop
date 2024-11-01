@@ -5,7 +5,12 @@ class ArtistsController < ApplicationController
     tracks = artist.tracks.popularity_ordered.limit(5)
 
     if turbo_frame_request?
-      render partial: "discography", locals: {artist:, albums:}
+      case turbo_frame_request_id
+      when /discography/
+        render partial: "discography", locals: {artist:, albums:}
+      when /popular_tracks/
+        render partial: "popular_tracks", locals: {artist:, tracks: tracks.offset(5)}
+      end
     else
       render action: :show, locals: {artist:, albums:, tracks:}
     end
