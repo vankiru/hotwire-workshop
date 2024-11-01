@@ -1,0 +1,9 @@
+<%# locals: (artist:, tracks:, offset:, page:) -%>
+<%= render "artists/header", artist: %>
+
+<hr class="my-4">
+
+<h2 class="mt-4 text-header-2">Tracks</h2>
+<ul class="tracks mt-2">
+  <%= render "tracks", artist:, tracks:, offset:, page: %>
+</ul>
