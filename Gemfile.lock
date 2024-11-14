@@ -304,6 +304,8 @@ GEM
     thor (1.2.2)
     tilt (2.2.0)
     timeout (0.4.0)
+    turbo-mount (0.4.0)
+      railties (>= 6.0.0)
     turbo-rails (1.4.0)
       actionpack (>= 6.0.0)
       activejob (>= 6.0.0)
@@ -337,6 +339,7 @@ PLATFORMS
   aarch64-linux
   arm64-darwin-21
   arm64-darwin-22
+  arm64-darwin-24
   x86_64-darwin-20
   x86_64-darwin-21
   x86_64-darwin-22
@@ -360,6 +363,7 @@ DEPENDENCIES
   standard (~> 1.28)
   stimulus-rails
   tailwindcss-rails
+  turbo-mount (~> 0.4.0)
   turbo-rails
   turbo_boost-commands
   web-console

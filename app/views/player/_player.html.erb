@@ -1,4 +1,12 @@
 <%# locals: (track:, station: nil, live: false) -%>
+<%= turbo_mount("AudioPlayer", props: {
+  track: "audio.wav",
+  title: track.title,
+  albumCover: rails_blob_path(track.album.cover, only_path: true),
+  artist: track.album.artist.name,
+  artistUrl: artist_path(track.album.artist)
+}) %>
+
 <div class="player"
   data-controller="player"
   data-player-duration-value="<%= track&.duration %>"
