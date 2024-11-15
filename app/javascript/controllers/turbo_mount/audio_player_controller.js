@@ -44,7 +44,24 @@ export default class extends TurboMountController {
       customIcons: {
         play: playIcon,
         pause: pauseIcon
-      }
+      },
+      onEnded: this.nextTrack
     };
+  }
+
+  nextTrack(nextTrackUrl) {
+    if (nextTrackUrl) {
+      this.fetchNextTrack(nextTrackUrl);
+    }
+  }
+
+  async fetchNextTrack(url) {
+    const request = new FetchRequest("POST", url, {
+      responseKind: "turbo-stream",
+    });
+    const response = await request.perform();
+    if (!response.ok) {
+      console.error("Failed to load next track", response.status);
+    }
   }
 }
