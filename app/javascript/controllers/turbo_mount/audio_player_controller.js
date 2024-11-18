@@ -1,20 +1,13 @@
 import { TurboMountController } from "turbo-mount";
 import { RHAP_UI } from "react-h5-audio-player";
 import { createElement } from "react";
+import { FetchRequest } from "@rails/request.js";
 
 import { playIcon, pauseIcon } from "../../icons"
 
 export default class extends TurboMountController {
   get componentProps() {
-    const { 
-      track,
-      title,
-      albumCover,
-      artist,
-      artistUrl
-    } = this.propsValue;
-
-    console.log(this.propsValue);
+    const { track } = this.propsValue;
 
     return {
       src: track,
@@ -23,33 +16,58 @@ export default class extends TurboMountController {
       customVolumeControls: false,
       customProgressBarSection: [
         RHAP_UI.PROGRESS_BAR, 
-        RHAP_UI.CURRENT_TIME,
-        createElement("span", null, "/"), 
-        RHAP_UI.DURATION
       ],
       customControlsSection: [
         RHAP_UI.MAIN_CONTROLS,
-        createElement(
-          "div",
-          { class: "player--cover" },
-          createElement("img", {src: albumCover}),
-        ),
-        createElement(
-          "div",
-          { class: "player--info" },
-          createElement("div", { class: "player--title" }, title),
-          createElement("a", { href: artistUrl, class: "player--author" }, artist)
-        ), 
+        this.trackInfo(),
+        RHAP_UI.CURRENT_TIME,
+        this.timestampsDash(),
+        RHAP_UI.DURATION
       ],
       customIcons: {
         play: playIcon,
         pause: pauseIcon
       },
-      onEnded: this.nextTrack
+      onEnded: this.handleEnded
     };
   }
 
-  nextTrack(nextTrackUrl) {
+  trackInfo = () => {
+    const {
+      title,
+      albumCover,
+      artist,
+      artistUrl
+    } = this.propsValue;
+
+    return createElement(
+      "div",
+      { class: "player--track" },
+      createElement(
+        "div",
+        { class: "player--cover" },
+        createElement("img", {src: albumCover}),
+      ),
+      createElement(
+        "div",
+        { class: "player--info" },
+        createElement("div", { class: "player--title" }, title),
+        createElement("a", { href: artistUrl, class: "player--author" }, artist)
+      )
+    );
+  }
+
+  timestampsDash = () => {
+    return createElement(
+      "span",
+      { class: "player--timestamps" },
+      "\u00A0 / \u00A0"
+    );
+  }
+
+  handleEnded = () => {
+    const { nextTrackUrl } = this.propsValue;
+
     if (nextTrackUrl) {
       this.fetchNextTrack(nextTrackUrl);
     }
@@ -59,6 +77,7 @@ export default class extends TurboMountController {
     const request = new FetchRequest("POST", url, {
       responseKind: "turbo-stream",
     });
+
     const response = await request.perform();
     if (!response.ok) {
       console.error("Failed to load next track", response.status);
