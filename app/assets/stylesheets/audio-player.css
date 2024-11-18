@@ -6,7 +6,7 @@
   @apply flex items-center flex-grow;
 }
 
-.rhap_progress-bar {
+.rhap_progress-container {
   @apply player--timeline;
 }
 
