@@ -1,129 +1,125 @@
-import { Controller } from "@hotwired/stimulus";
-import FakeAudio from "fake_audio";
+import { TurboMountController } from "turbo-mount";
+import { RHAP_UI } from "react-h5-audio-player";
+import { createElement, createRef } from "react";
 import { FetchRequest } from "@rails/request.js";
 
-function secondsToDuration(num) {
-  let mins = Math.floor(num / 60);
-  let secs = (num | 0) % 60;
-  if (mins < 10) mins = "0" + mins;
-  if (secs < 10) secs = "0" + secs;
-  return `${mins}:${secs}`;
-}
+import { playIcon, pauseIcon, signalIcon, radioIcon } from "../icons"
 
-// Connects to data-controller="player"
-export default class extends Controller {
-  static targets = ["progress", "time"];
+export default class extends TurboMountController {
   static outlets = ["track"];
-  static values = { duration: Number, track: String, nextTrackUrl: String };
-  static classes = ["playing"];
 
-  initialize() {
-    this.handleTimeUpdate = this.handleTimeUpdate.bind(this);
-    this.handleEnded = this.handleEnded.bind(this);
-    this.playing = false;
+  get componentProps() {
+    const { track } = this.propsValue;
+    this.player = createRef();
+
+    return {
+      ref: this.player,
+      src: track.src,
+      autoPlay: false,
+      showJumpControls: false,
+      customVolumeControls: false,
+      customProgressBarSection: [
+        RHAP_UI.PROGRESS_BAR
+      ],
+      customControlsSection: this.controlsSection(),
+      customIcons: {
+        play: playIcon,
+        pause: pauseIcon
+      },
+      onCanPlay: this.handleCanPlay,
+      onEnded: this.handleEnded
+    };
   }
 
-  trackValueChanged() {
-    this.disposeAudio();
-    if (!this.trackValue) return;
+  controlsSection() {
+    const { station } = this.propsValue;
 
-    this.audio = new FakeAudio(this.durationValue);
-    this.setupAudioListeners();
-    this.play();
+    return [
+      station ? this.stationInfo() : RHAP_UI.MAIN_CONTROLS,
+      this.trackInfo(),
+      RHAP_UI.CURRENT_TIME,
+      this.timestampsDash(),
+      RHAP_UI.DURATION
+    ]
+  }
 
-    for (let outlet of this.trackOutlets) {
-      outlet.togglePlayingIfMatch(this.trackValue);
+  stationInfo() {
+    const { station } = this.propsValue;
+
+    if (station.live) {
+      return createElement(
+        "div",
+        { class: "player--radio" },
+        createElement("span", { class: "player--signal-icon" }, signalIcon),
+        createElement("a", { href: station.url, class: "player--title ml-2" }, "Live!")
+      );
+    } else {
+      return createElement(
+        "div",
+        { class: "player--radio" },
+        radioIcon,
+        createElement("span", { class: "player--author ml-2" }, station.name),
+        createElement("div", { dangerouslySetInnerHTML: { __html: station.stream } })
+      )
     }
+  }
+
+  trackInfo() {
+    const { track } = this.propsValue;
+
+    return createElement(
+      "div",
+      { class: "player--track" },
+      createElement(
+        "div",
+        { class: "player--cover" },
+        createElement("img", {src: track.albumCover}),
+      ),
+      createElement(
+        "div",
+        { class: "player--info" },
+        createElement("div", { class: "player--title" }, track.title),
+        createElement("a", { href: track.artistUrl, class: "player--author" }, track.artist)
+      )
+    );
+  }
+
+  timestampsDash() {
+    return createElement(
+      "span",
+      { class: "player--timestamps" },
+      "\u00A0 / \u00A0"
+    );
   }
 
   trackOutletConnected(outlet, el) {
-    outlet.togglePlayingIfMatch(this.trackValue);
+    const { track } = this.propsValue;
+    outlet.togglePlayingIfMatch(track.id);
   }
 
-  connect() {
-    // Permanent element was re-attached to DOM
-    if (this.audio) {
-      this.setupAudioListeners();
+  handleCanPlay = () => {
+    // A workaround for autoplay, as it starts
+    // audio every time we navigate to a new
+    // page causing a cacophony.
+    this.player.current.audio.current.play();
+  }
+
+  handleEnded = () => {
+    const { nextTrackUrl } = this.propsValue;
+
+    if (nextTrackUrl) {
+      this.fetchNextTrack(nextTrackUrl);
     }
-
-    if (this.playing) {
-      this.play();
-    }
-  }
-
-  disconnect() {
-    if (this.audio) {
-      this.removeAudioListeners();
-    }
-  }
-
-  play() {
-    this.element.classList.add(this.playingClass);
-    this.audio.play();
-    this.playing = true;
-  }
-
-  pause() {
-    this.element.classList.remove(this.playingClass);
-    this.audio.pause();
-    this.playing = false;
-  }
-
-  seek(e) {
-    const position =
-      (e.offsetX / e.currentTarget.offsetWidth) * this.durationValue;
-    this.audio.fastSeek(position);
-  }
-
-  handleEnded() {
-    this.pause();
-
-    if (this.nextTrackUrlValue) {
-      this.fetchNextTrack(this.nextTrackUrlValue);
-    }
-  }
-
-  handleTimeUpdate() {
-    const currentTime = this.audio.currentTime;
-
-    this.updateProgress(currentTime);
   }
 
   async fetchNextTrack(url) {
     const request = new FetchRequest("POST", url, {
       responseKind: "turbo-stream",
     });
+
     const response = await request.perform();
     if (!response.ok) {
       console.error("Failed to load next track", response.status);
     }
-  }
-
-  updateProgress(currentTime) {
-    const percent = (currentTime * 100) / this.durationValue;
-
-    if (this.hasProgressTarget) this.progressTarget.style.width = `${percent}%`;
-    if (this.hasTimeTarget)
-      this.timeTarget.textContent = secondsToDuration(currentTime);
-  }
-
-  disposeAudio() {
-    if (!this.audio) return;
-
-    this.removeAudioListeners();
-    this.pause();
-    this.updateProgress(0);
-
-    delete this.audio;
-  }
-
-  setupAudioListeners() {
-    this.audio.addEventListener("timeupdate", this.handleTimeUpdate);
-    this.audio.addEventListener("ended", this.handleEnded);
-  }
-
-  removeAudioListeners() {
-    this.audio.removeEventListener("timeupdate", this.handleTimeUpdate);
-    this.audio.removeEventListener("ended", this.handleEnded);
   }
 }

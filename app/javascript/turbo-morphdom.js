@@ -7,7 +7,42 @@ document.addEventListener("turbo:before-render", (event) => {
   prevPath = window.location.pathname;
   event.detail.render = async (prevEl, newEl) => {
     await new Promise((resolve) => setTimeout(() => resolve(), 0));
-    morphdom(prevEl, newEl);
+
+    morphdom(prevEl, newEl, {
+      onBeforeNodeAdded: function(node) {
+        if (
+          node && node.hasAttribute &&
+          node.hasAttribute("data-turbo-morph-permanent") &&
+          document.documentElement.hasAttribute("data-turbo-preview")
+        ) {
+          return false;
+        }
+
+        return node;
+      },
+      onBeforeElUpdated: function(fromEl, toEl) {
+        if (fromEl.hasAttribute("data-turbo-morph-permanent")) {
+          return false;
+        }
+
+        if (fromEl.isEqualNode(toEl)) {
+          return false;
+        }
+
+        return true;
+      },
+      onBeforeNodeDiscarded: function(node) {
+        if (
+          node && node.hasAttribute &&
+          node.hasAttribute("data-turbo-morph-permanent") &&
+          document.documentElement.hasAttribute("data-turbo-preview")
+        ) {
+          return false;
+        }
+
+        return true;
+      },
+    });
   };
 
   if (document.startViewTransition) {

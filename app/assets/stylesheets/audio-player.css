@@ -1,0 +1,23 @@
+.rhap_main {
+  @apply player;
+}
+
+.rhap_controls-section {
+  @apply flex items-center flex-grow;
+}
+
+.rhap_progress-container {
+  @apply player--timeline;
+}
+
+.rhap_progress-filled {
+  @apply player--timeline-progress;
+}
+
+.rhap_time {
+  @apply player--timestamps;
+}
+
+.rhap_current-time {
+  @apply player--current-time;
+}
