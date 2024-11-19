@@ -6,6 +6,8 @@ import { FetchRequest } from "@rails/request.js";
 import { playIcon, pauseIcon } from "../../icons"
 
 export default class extends TurboMountController {
+  static outlets = ["track"];
+
   get componentProps() {
     const { track } = this.propsValue;
 
@@ -32,7 +34,7 @@ export default class extends TurboMountController {
     };
   }
 
-  trackInfo = () => {
+  trackInfo() {
     const {
       title,
       albumCover,
@@ -57,12 +59,17 @@ export default class extends TurboMountController {
     );
   }
 
-  timestampsDash = () => {
+  timestampsDash() {
     return createElement(
       "span",
       { class: "player--timestamps" },
       "\u00A0 / \u00A0"
     );
+  }
+
+  trackOutletConnected(outlet, el) {
+    const { trackId } = this.propsValue;
+    outlet.togglePlayingIfMatch(trackId);
   }
 
   handleEnded = () => {
