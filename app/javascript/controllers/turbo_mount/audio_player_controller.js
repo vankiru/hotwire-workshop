@@ -1,6 +1,6 @@
 import { TurboMountController } from "turbo-mount";
 import { RHAP_UI } from "react-h5-audio-player";
-import { createElement } from "react";
+import { createElement, createRef } from "react";
 import { FetchRequest } from "@rails/request.js";
 
 import { playIcon, pauseIcon } from "../../icons"
@@ -10,14 +10,16 @@ export default class extends TurboMountController {
 
   get componentProps() {
     const { track } = this.propsValue;
+    this.player = createRef();
 
     return {
+      ref: this.player,
       src: track,
-      autoPlay: true,
+      autoPlay: false,
       showJumpControls: false,
       customVolumeControls: false,
       customProgressBarSection: [
-        RHAP_UI.PROGRESS_BAR, 
+        RHAP_UI.PROGRESS_BAR
       ],
       customControlsSection: [
         RHAP_UI.MAIN_CONTROLS,
@@ -30,6 +32,8 @@ export default class extends TurboMountController {
         play: playIcon,
         pause: pauseIcon
       },
+      onCanPlay: this.handleCanPlay,
+      onPlay: this.handlePlay,
       onEnded: this.handleEnded
     };
   }
@@ -70,6 +74,17 @@ export default class extends TurboMountController {
   trackOutletConnected(outlet, el) {
     const { trackId } = this.propsValue;
     outlet.togglePlayingIfMatch(trackId);
+  }
+
+  handleCanPlay = () => {
+    // Workaround for autoplay, as it starts
+    // audio every time we navigate to a new
+    // page causing a cacophony.
+    this.player.current.audio.current.play();
+  }
+
+  handlePlay = () => {
+    console.log("Playing");
   }
 
   handleEnded = () => {

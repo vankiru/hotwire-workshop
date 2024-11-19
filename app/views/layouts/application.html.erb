@@ -7,7 +7,7 @@
 
   <%= render partial: "albums/aside" %>
 
-  <div id="player" data-turbo-permanent class="contents">
+  <div id="player" data-turbo-morph-permanent class="sticky bottom-0">
     <%- if current_user&.live_station&.live? %>
       <%= render partial: "player/player", locals: {station: current_user.live_station, track: current_user.live_station.current_track, live: true} %>
     <% end %>
