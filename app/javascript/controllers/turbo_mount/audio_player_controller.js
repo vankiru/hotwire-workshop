@@ -33,7 +33,6 @@ export default class extends TurboMountController {
         pause: pauseIcon
       },
       onCanPlay: this.handleCanPlay,
-      onPlay: this.handlePlay,
       onEnded: this.handleEnded
     };
   }
@@ -77,14 +76,10 @@ export default class extends TurboMountController {
   }
 
   handleCanPlay = () => {
-    // Workaround for autoplay, as it starts
+    // A workaround for autoplay, as it starts
     // audio every time we navigate to a new
     // page causing a cacophony.
     this.player.current.audio.current.play();
-  }
-
-  handlePlay = () => {
-    console.log("Playing");
   }
 
   handleEnded = () => {

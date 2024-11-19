@@ -2,7 +2,7 @@
 <%= turbo_mount(
   "AudioPlayer",
   props: {
-    track: "audio.wav",
+    track: "/audio.wav",
     trackId: track.id,
     title: track.title,
     albumCover: rails_blob_path(track.album.cover, only_path: true),
