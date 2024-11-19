@@ -2,13 +2,21 @@
 <%= turbo_mount(
   "AudioPlayer",
   props: {
-    track: "/audio.wav",
-    trackId: track.id,
-    title: track.title,
-    albumCover: rails_blob_path(track.album.cover, only_path: true),
-    artist: track.album.artist.name,
-    artistUrl: artist_path(track.album.artist),
-    nextTrackUrl: live ? play_next_live_station_path : (!station && play_next_track_path(track))
+    track: {
+      id: track.id,
+      src: "/audio.wav",
+      title: track.title,
+      albumCover: rails_blob_path(track.album.cover, only_path: true),
+      artist: track.album.artist.name,
+      artistUrl: artist_path(track.album.artist)
+    },
+    nextTrackUrl: live ? play_next_live_station_path : (!station && play_next_track_path(track)),
+    station: station && {
+      live: live,
+      url: live_station_path,
+      name: station&.name,
+      stream: station && turbo_stream_from(station)
+    }
   },
   "data-turbo-mount-audio-player-track-outlet" => ".track"
 ) %>

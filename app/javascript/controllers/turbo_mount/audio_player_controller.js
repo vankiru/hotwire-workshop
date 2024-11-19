@@ -3,7 +3,7 @@ import { RHAP_UI } from "react-h5-audio-player";
 import { createElement, createRef } from "react";
 import { FetchRequest } from "@rails/request.js";
 
-import { playIcon, pauseIcon } from "../../icons"
+import { playIcon, pauseIcon, signalIcon, radioIcon } from "../../icons"
 
 export default class extends TurboMountController {
   static outlets = ["track"];
@@ -14,20 +14,14 @@ export default class extends TurboMountController {
 
     return {
       ref: this.player,
-      src: track,
+      src: track.src,
       autoPlay: false,
       showJumpControls: false,
       customVolumeControls: false,
       customProgressBarSection: [
         RHAP_UI.PROGRESS_BAR
       ],
-      customControlsSection: [
-        RHAP_UI.MAIN_CONTROLS,
-        this.trackInfo(),
-        RHAP_UI.CURRENT_TIME,
-        this.timestampsDash(),
-        RHAP_UI.DURATION
-      ],
+      customControlsSection: this.controlsSection(),
       customIcons: {
         play: playIcon,
         pause: pauseIcon
@@ -37,13 +31,41 @@ export default class extends TurboMountController {
     };
   }
 
+  controlsSection() {
+    const { station } = this.propsValue;
+
+    return [
+      station ? this.stationInfo() : RHAP_UI.MAIN_CONTROLS,
+      this.trackInfo(),
+      RHAP_UI.CURRENT_TIME,
+      this.timestampsDash(),
+      RHAP_UI.DURATION
+    ]
+  }
+
+  stationInfo() {
+    const { station } = this.propsValue;
+
+    if (station.live) {
+      return createElement(
+        "div",
+        { class: "player--radio" },
+        createElement("span", { class: "player--signal-icon" }, signalIcon),
+        createElement("a", { href: station.url, class: "player--title ml-2" }, "Live!")
+      );
+    } else {
+      return createElement(
+        "div",
+        { class: "player--radio" },
+        radioIcon,
+        createElement("span", { class: "player--author ml-2" }, station.name),
+        createElement("div", { dangerouslySetInnerHTML: { __html: station.stream } })
+      )
+    }
+  }
+
   trackInfo() {
-    const {
-      title,
-      albumCover,
-      artist,
-      artistUrl
-    } = this.propsValue;
+    const { track } = this.propsValue;
 
     return createElement(
       "div",
@@ -51,13 +73,13 @@ export default class extends TurboMountController {
       createElement(
         "div",
         { class: "player--cover" },
-        createElement("img", {src: albumCover}),
+        createElement("img", {src: track.albumCover}),
       ),
       createElement(
         "div",
         { class: "player--info" },
-        createElement("div", { class: "player--title" }, title),
-        createElement("a", { href: artistUrl, class: "player--author" }, artist)
+        createElement("div", { class: "player--title" }, track.title),
+        createElement("a", { href: track.artistUrl, class: "player--author" }, track.artist)
       )
     );
   }
@@ -71,8 +93,8 @@ export default class extends TurboMountController {
   }
 
   trackOutletConnected(outlet, el) {
-    const { trackId } = this.propsValue;
-    outlet.togglePlayingIfMatch(trackId);
+    const { track } = this.propsValue;
+    outlet.togglePlayingIfMatch(track.id);
   }
 
   handleCanPlay = () => {
